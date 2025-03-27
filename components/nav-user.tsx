@@ -49,18 +49,21 @@ export function NavUser() {
         <SignedIn>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <SidebarMenuButton
-                size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              >
-                {/* ✅ Display Avatar */}
-                <Avatar>
-                  <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User"} />
-                  <AvatarFallback>{user?.firstName?.charAt(0) || "U"}</AvatarFallback>
-                </Avatar>
+            <SidebarMenuButton
+  size="lg"
+  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+>
+  <Avatar>
+    <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User"} />
+    <AvatarFallback>{user?.firstName?.charAt(0) || "U"}</AvatarFallback>
+  </Avatar>
+  <div className="ml-3 text-left overflow-hidden">
+    <p className="text-sm font-medium truncate leading-tight">{user?.fullName || "User"}</p>
+    <p className="text-xs text-muted-foreground truncate">{user?.primaryEmailAddress?.emailAddress || "No email"}</p>
+  </div>
+  <ChevronsUpDown className="ml-auto size-4" />
+</SidebarMenuButton>
 
-                <ChevronsUpDown className="ml-auto size-4" />
-              </SidebarMenuButton>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
