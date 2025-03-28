@@ -132,8 +132,8 @@ export function ReportDialog({
                       <CardContent className="pt-6">
                         <div className="text-2xl font-bold">
                           {resourceType === "labor"
-                            ? `$${stats.lastForecast.toFixed(2)}/hr`
-                            : `$${stats.lastForecast.toFixed(2)}`}
+                            ? `₱${stats.lastForecast.toFixed(2)}/hr`
+                            : `₱${stats.lastForecast.toFixed(2)}`}
                         </div>
                         <div className="text-sm text-muted-foreground">Forecasted Price</div>
                       </CardContent>
@@ -153,8 +153,8 @@ export function ReportDialog({
                       <CardContent className="pt-6">
                         <div className="text-2xl font-bold">
                           {resourceType === "labor"
-                            ? `$${stats.forecastAvg.toFixed(2)}/hr`
-                            : `$${stats.forecastAvg.toFixed(2)}`}
+                            ? `₱${stats.forecastAvg.toFixed(2)}/hr`
+                            : `₱${stats.forecastAvg.toFixed(2)}`}
                         </div>
                         <div className="text-sm text-muted-foreground">Average Forecast</div>
                       </CardContent>
