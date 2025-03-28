@@ -21,35 +21,49 @@ interface ForecastChartProps {
   resourceType: string
 }
 
-export function ForecastChart({ forecastData, isLoading, chartType, resourceType }: ForecastChartProps) {
+export function ForecastChart({
+  forecastData,
+  isLoading,
+  chartType,
+  resourceType,
+}: ForecastChartProps) {
   if (isLoading) return <Skeleton className="w-full h-full" />
 
-  // ✅ Normalize data
-  const formattedForecast = forecastData.map((item) => ({
-    date: item.date || item.created_at,
-    price: item.price || item.cost,
-  }))
+  // Normalize and enhance forecast data
+  const formattedForecast = forecastData.map((item) => {
+    const price = item.price || item.cost
+    return {
+      date: new Date(item.date || item.created_at).toISOString().split("T")[0],
+      price,
+      upperBound: price * 1.05,
+      lowerBound: price * 0.95,
+    }
+  })
 
-  // ✅ Add confidence bounds
-  const dataWithConfidence = formattedForecast.map((item) => ({
-    ...item,
-    upperBound: item.price * 1.05,
-    lowerBound: item.price * 0.95,
-  }))
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString("en-US", { month: "short", year: "numeric" })
-  }
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    })
 
   const formatPrice = (price: number) =>
-    resourceType === "labor" ? `$${price.toFixed(2)}/hr` : `$${price.toFixed(2)}`
+    resourceType === "labor"
+      ? `$${price.toFixed(2)}/hr`
+      : `$${price.toFixed(2)}`
 
   return (
     <ChartContainer className="w-full h-full">
-      <Chart data={dataWithConfidence}>
+      <Chart data={formattedForecast}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" tickFormatter={formatDate} tick={{ fontSize: 12 }} />
+        <XAxis
+  dataKey="date"
+  tickFormatter={(dateStr) => {
+    const date = new Date(dateStr)
+    return `${date.toLocaleString("default", { month: "short" })} ${date.getFullYear()}`
+  }}
+  tick={{ fontSize: 12 }}
+/>
+
         <YAxis
           tickFormatter={(value) => `$${value}`}
           tick={{ fontSize: 12 }}

@@ -156,26 +156,6 @@ export default function Dashboard() {
     };
   }
   
-  // Load resource options based on selected type
-  useEffect (() => {
-    const params = new URLSearchParams({
-      type: resourceType.toLowerCase(),
-      name: selectedResource,
-      steps: forecastMonths.toString()
-    });
-
-    fetch(`https://sdg-arima.onrender.com/predict?${params}`)
-      .then(response => response.json())
-      .then(data => {
-        console.log("Fetched forecast data:", data.forecast);
-        setForecastData(data.forecast || [])
-        console.log(forecastData)
-      })
-      .catch(error => {
-        console.error("Error fetching forecast:", error);
-      });
-  }, [resourceType, selectedResource, forecastMonths]);
-
   useEffect(() => {
     setIsLoadingResources(true)
     setSelectedResource("")
@@ -205,35 +185,40 @@ export default function Dashboard() {
 
   // Load data when resource selection changes
   useEffect(() => {
-    if (!selectedResource) return
-
+    if (!selectedResource) return;
+  
     const loadData = async () => {
-      setIsLoadingData(true)
+      setIsLoadingData(true);
       try {
         const [historical, forecast, accuracy] = await Promise.all([
           fetchHistoricalData(resourceType, selectedResource),
           fetchForecastData(resourceType, selectedResource, forecastMonths),
           fetchModelAccuracy(resourceType, selectedResource),
-        ])
-
-        setHistoricalData(historical)
-        setForecastData(forecast)
-        setAccuracyData(accuracy)
+        ]);
+  
+        console.log("Fetched historical data:", historical);
+        console.log("Fetched forecast data:", forecast);
+        console.log("Fetched accuracy data:", accuracy);
+  
+        setHistoricalData(historical);
+        setForecastData(forecast);
+        setAccuracyData(accuracy);
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error("Error fetching data:", error);
         toast({
           title: "Error",
           description: "Failed to load forecast data.",
           variant: "destructive",
-        })
+        });
       } finally {
-        setIsLoadingData(false)
-        setIsLoading(false)
+        setIsLoadingData(false);
+        setIsLoading(false);
       }
-    }
-
-    loadData()
-  }, [selectedResource, forecastMonths, resourceType, toast])
+    };
+  
+    loadData();
+  }, [selectedResource, forecastMonths, resourceType, toast]);
+  
 
   // Filter resources based on search query
   const filteredResources = resourceOptions.filter((resource) =>
@@ -497,13 +482,15 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="h-[400px]">
-              <PriceChart
-                historicalData={historicalData}
-                forecastData={forecastData}
-                isLoading={isLoadingData}
-                chartType={chartType}
-                resourceType={resourceType}
-              />
+              
+            <PriceChart
+              historicalData={historicalData}
+              forecastData={forecastData}
+              isLoading={isLoadingData}
+              chartType={chartType}
+              resourceType={resourceType}
+            />
+
             </CardContent>
           </Card>
         </TabsContent>

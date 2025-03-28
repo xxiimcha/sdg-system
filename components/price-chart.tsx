@@ -21,6 +21,7 @@ interface PriceChartProps {
   chartType: "line" | "bar"
   resourceType: string
 }
+
 export function PriceChart({
   historicalData,
   forecastData,
@@ -30,35 +31,82 @@ export function PriceChart({
 }: PriceChartProps) {
   if (isLoading) return <Skeleton className="w-full h-full" />
 
-  // Normalize data
+  // Normalize
   const formattedHistorical = historicalData.map((item) => ({
-    date: item.date || item.created_at,
-    price: item.price || item.cost,
-    type: "Historical",
+    date: new Date(item.date || item.created_at).toISOString().split("T")[0],
+    historical: Number(item.price || item.cost),
+    forecast: null,
   }))
 
-  const formattedForecast = forecastData.map((item) => ({
-    date: item.date || item.created_at,
-    price: item.price || item.cost,
-    type: "Forecast",
-  }))
+  const formattedForecast = forecastData.map((item) => {
+    const rawPrice = item.price ?? item.cost;
+    const parsedPrice =
+      typeof rawPrice === "string" ? parseFloat(rawPrice.trim()) : rawPrice;
+  
+    return {
+      date: new Date(item.date || item.created_at).toISOString().split("T")[0],
+      forecast: isNaN(parsedPrice) ? null : parsedPrice,
+      historical: null,
+    };
+  });
+  
+  const mergedMap = new Map<string, { date: string; historical: number | null; forecast: number | null }>();
 
-  const combinedData = [...formattedHistorical, ...formattedForecast]
+  // Insert historical data
+  formattedHistorical.forEach((item) => {
+    mergedMap.set(item.date, {
+      date: item.date,
+      historical: item.historical,
+      forecast: null,
+    });
+  });
+  
+  // Insert forecast data and merge
+  formattedForecast.forEach((item) => {
+    if (mergedMap.has(item.date)) {
+      const existing = mergedMap.get(item.date)!;
+      existing.forecast = item.forecast;
+    } else {
+      mergedMap.set(item.date, {
+        date: item.date,
+        historical: null,
+        forecast: item.forecast,
+      });
+    }
+  });
+
+  // Combine & sort
+  const combined = [...formattedHistorical, ...formattedForecast].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  )
+
+  console.log("FINAL CHART DATA", combined);
+  // Log for debugging
+  console.log("Chart Data:", combined)
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString("en-US", { month: "short", year: "numeric" })
   }
 
-  const formatPrice = (price: number) =>
-    resourceType === "labor" ? `$${price.toFixed(2)}/hr` : `$${price.toFixed(2)}`
+  const formatPrice = (price: number | null) =>
+    typeof price === "number"
+      ? resourceType === "labor"
+        ? `$${price.toFixed(2)}/hr`
+        : `$${price.toFixed(2)}`
+      : "N/A"
 
   return (
     <ChartContainer className="w-full h-full">
-      <Chart data={combinedData}>
+      <Chart data={combined}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" tickFormatter={formatDate} tick={{ fontSize: 12 }} />
+        <XAxis
+          dataKey="date"
+          tickFormatter={formatDate}
+          tick={{ fontSize: 12 }}
+        />
         <YAxis
+          domain={["auto", "auto"]}
           tickFormatter={(value) => `$${value}`}
           tick={{ fontSize: 12 }}
           label={{
@@ -68,62 +116,46 @@ export function PriceChart({
             style: { textAnchor: "middle" },
           }}
         />
-        <ChartTooltip
-          content={
-            <ChartTooltipContent
-              label=""
-              payload={[]}
-              labelFormatter={formatDate}
-              formatter={formatPrice}
-            />
-          }
-        />
         <Legend />
 
         {chartType === "line" ? (
           <>
             <Line
               type="monotone"
-              dataKey="price"
+              dataKey="historical"
               stroke="#8884d8"
               strokeWidth={2}
               name="Historical"
-              connectNulls
               dot={{ r: 4 }}
               activeDot={{ r: 6 }}
               isAnimationActive={false}
-              animationDuration={500}
-              data={formattedHistorical}
+              connectNulls
             />
             <Line
               type="monotone"
-              dataKey="price"
+              dataKey="forecast"
               stroke="#82ca9d"
               strokeWidth={2}
               strokeDasharray="5 5"
               name="Forecast"
-              connectNulls
               dot={{ r: 4 }}
               activeDot={{ r: 6 }}
               isAnimationActive={false}
-              animationDuration={500}
-              data={formattedForecast}
+              connectNulls
             />
           </>
         ) : (
           <>
             <Bar
-              dataKey="price"
+              dataKey="historical"
               fill="#8884d8"
               name="Historical"
-              data={formattedHistorical}
               isAnimationActive={false}
             />
             <Bar
-              dataKey="price"
+              dataKey="forecast"
               fill="#82ca9d"
               name="Forecast"
-              data={formattedForecast}
               isAnimationActive={false}
             />
           </>
