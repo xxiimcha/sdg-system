@@ -22,27 +22,28 @@ interface ForecastChartProps {
 }
 
 export function ForecastChart({ forecastData, isLoading, chartType, resourceType }: ForecastChartProps) {
-  if (isLoading) {
-    return <Skeleton className="w-full h-full" />
-  }
+  if (isLoading) return <Skeleton className="w-full h-full" />
 
-  // Format date for display
+  // ✅ Normalize data
+  const formattedForecast = forecastData.map((item) => ({
+    date: item.date || item.created_at,
+    price: item.price || item.cost,
+  }))
+
+  // ✅ Add confidence bounds
+  const dataWithConfidence = formattedForecast.map((item) => ({
+    ...item,
+    upperBound: item.price * 1.05,
+    lowerBound: item.price * 0.95,
+  }))
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString("en-US", { month: "short", year: "numeric" })
   }
 
-  // Format price for display
-  const formatPrice = (price: number) => {
-    return resourceType === "labor" ? `$${price.toFixed(2)}/hr` : `$${price.toFixed(2)}`
-  }
-
-  // Calculate confidence intervals (for demonstration)
-  const dataWithConfidence = forecastData.map((item) => ({
-    ...item,
-    upperBound: item.price * 1.05, // 5% above forecast
-    lowerBound: item.price * 0.95, // 5% below forecast
-  }))
+  const formatPrice = (price: number) =>
+    resourceType === "labor" ? `$${price.toFixed(2)}/hr` : `$${price.toFixed(2)}`
 
   return (
     <ChartContainer className="w-full h-full">
@@ -59,7 +60,16 @@ export function ForecastChart({ forecastData, isLoading, chartType, resourceType
             style: { textAnchor: "middle" },
           }}
         />
-        <ChartTooltip content={<ChartTooltipContent label="" payload={[]} labelFormatter={formatDate} formatter={formatPrice} />} />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              label=""
+              payload={[]}
+              labelFormatter={formatDate}
+              formatter={formatPrice}
+            />
+          }
+        />
 
         {chartType === "line" ? (
           <>
@@ -94,10 +104,15 @@ export function ForecastChart({ forecastData, isLoading, chartType, resourceType
             />
           </>
         ) : (
-          <Bar dataKey="price" fill="#82ca9d" name="Forecast" isAnimationActive={true} animationDuration={500} />
+          <Bar
+            dataKey="price"
+            fill="#82ca9d"
+            name="Forecast"
+            isAnimationActive={true}
+            animationDuration={500}
+          />
         )}
       </Chart>
     </ChartContainer>
   )
 }
-

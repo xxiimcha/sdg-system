@@ -21,34 +21,37 @@ interface PriceChartProps {
   chartType: "line" | "bar"
   resourceType: string
 }
+export function PriceChart({
+  historicalData,
+  forecastData,
+  isLoading,
+  chartType,
+  resourceType,
+}: PriceChartProps) {
+  if (isLoading) return <Skeleton className="w-full h-full" />
 
-export function PriceChart({ historicalData, forecastData, isLoading, chartType, resourceType }: PriceChartProps) {
-  if (isLoading) {
-    return <Skeleton className="w-full h-full" />
-  }
+  // Normalize data
+  const formattedHistorical = historicalData.map((item) => ({
+    date: item.date || item.created_at,
+    price: item.price || item.cost,
+    type: "Historical",
+  }))
 
-  // Combine data for the chart
-  const combinedData = [
-    ...historicalData.map((item) => ({
-      ...item,
-      type: "Historical",
-    })),
-    ...forecastData.map((item) => ({
-      ...item,
-      type: "Forecast",
-    })),
-  ]
+  const formattedForecast = forecastData.map((item) => ({
+    date: item.date || item.created_at,
+    price: item.price || item.cost,
+    type: "Forecast",
+  }))
 
-  // Format date for display
+  const combinedData = [...formattedHistorical, ...formattedForecast]
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString("en-US", { month: "short", year: "numeric" })
   }
 
-  // Format price for display
-  const formatPrice = (price: number) => {
-    return resourceType === "labor" ? `$${price.toFixed(2)}/hr` : `$${price.toFixed(2)}`
-  }
+  const formatPrice = (price: number) =>
+    resourceType === "labor" ? `$${price.toFixed(2)}/hr` : `$${price.toFixed(2)}`
 
   return (
     <ChartContainer className="w-full h-full">
@@ -65,7 +68,16 @@ export function PriceChart({ historicalData, forecastData, isLoading, chartType,
             style: { textAnchor: "middle" },
           }}
         />
-        <ChartTooltip content={<ChartTooltipContent label="" payload={[]} labelFormatter={formatDate} formatter={formatPrice} />} />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              label=""
+              payload={[]}
+              labelFormatter={formatDate}
+              formatter={formatPrice}
+            />
+          }
+        />
         <Legend />
 
         {chartType === "line" ? (
@@ -81,10 +93,7 @@ export function PriceChart({ historicalData, forecastData, isLoading, chartType,
               activeDot={{ r: 6 }}
               isAnimationActive={false}
               animationDuration={500}
-              data={historicalData.map((item) => ({
-                ...item,
-                type: "Historical",
-              }))}
+              data={formattedHistorical}
             />
             <Line
               type="monotone"
@@ -98,10 +107,7 @@ export function PriceChart({ historicalData, forecastData, isLoading, chartType,
               activeDot={{ r: 6 }}
               isAnimationActive={false}
               animationDuration={500}
-              data={forecastData.map((item) => ({
-                ...item,
-                type: "Forecast",
-              }))}
+              data={formattedForecast}
             />
           </>
         ) : (
@@ -110,23 +116,15 @@ export function PriceChart({ historicalData, forecastData, isLoading, chartType,
               dataKey="price"
               fill="#8884d8"
               name="Historical"
+              data={formattedHistorical}
               isAnimationActive={false}
-              animationDuration={500}
-              data={historicalData.map((item) => ({
-                ...item,
-                type: "Historical",
-              }))}
             />
             <Bar
               dataKey="price"
               fill="#82ca9d"
               name="Forecast"
+              data={formattedForecast}
               isAnimationActive={false}
-              animationDuration={500}
-              data={forecastData.map((item) => ({
-                ...item,
-                type: "Forecast",
-              }))}
             />
           </>
         )}
@@ -134,4 +132,3 @@ export function PriceChart({ historicalData, forecastData, isLoading, chartType,
     </ChartContainer>
   )
 }
-
