@@ -482,15 +482,13 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="h-[400px]">
-              
-            <PriceChart
-              historicalData={historicalData}
-              forecastData={forecastData}
-              isLoading={isLoadingData}
-              chartType={chartType}
-              resourceType={resourceType}
-            />
-
+              <PriceChart
+                historicalData={historicalData}
+                forecastData={forecastData}
+                isLoading={isLoadingData}
+                chartType={chartType}
+                resourceType={resourceType}
+              />
             </CardContent>
           </Card>
         </TabsContent>
